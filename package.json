@@ -19,7 +19,8 @@
   "dependencies": {
     "@oclif/core": "^2",
     "@oclif/plugin-help": "^5",
-    "@oclif/plugin-plugins": "^3.2.0"
+    "@oclif/plugin-plugins": "^3.2.0",
+    "chalk": "^4.1.2"
   },
   "devDependencies": {
     "@oclif/test": "^2.4.4",
