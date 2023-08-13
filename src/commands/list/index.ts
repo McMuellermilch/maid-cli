@@ -1,4 +1,4 @@
-import { Command } from "@oclif/core";
+import { Command, Flags } from "@oclif/core";
 const chalk = require("chalk");
 const fs = require("fs");
 const path = require("path");
@@ -6,7 +6,42 @@ const path = require("path");
 export class List extends Command {
   static description = "Clean current directory";
 
+  static flags = {
+    files: Flags.boolean({
+      char: "f",
+      description: "Show files",
+      required: false,
+    }),
+    dirs: Flags.boolean({
+      char: "d",
+      description: "Show directories",
+      required: false,
+    }),
+  };
+
+  listFiles(currentDirectory: string, files: string[]) {
+    const fileList = files.filter((file) =>
+      fs.statSync(path.join(currentDirectory, file)).isFile()
+    );
+    console.log(chalk.blue("\nFiles in current directory"));
+    fileList.forEach((file: any) => {
+      console.log(file);
+    });
+  }
+
+  listDirectories(currentDirectory: string, files: string[]) {
+    const dirList = files.filter((file) =>
+      fs.statSync(path.join(currentDirectory, file)).isDirectory()
+    );
+
+    console.log(chalk.red("\nDirectories in current directory"));
+    dirList.forEach((file: any) => {
+      console.log(file);
+    });
+  }
+
   async run(): Promise<void> {
+    const { flags } = await this.parse(List);
     const currentDirectory = process.cwd(); // Aktuelles Verzeichnis
 
     fs.readdir(currentDirectory, (err: any, files: any[]) => {
@@ -14,15 +49,24 @@ export class List extends Command {
         console.error("Error while reading directory:", err);
         return;
       }
-
-      console.log(chalk.blue("Files in current directory"));
-      files.forEach((file: any) => {
-        const filePath = path.join(currentDirectory, file);
-        const isFile = fs.statSync(filePath).isFile();
-        if (isFile) {
-          console.log(file);
+      if (!flags.files && !flags.dirs) {
+        files.forEach((file) => {
+          if (fs.statSync(path.join(currentDirectory, file)).isDirectory()) {
+            console.log(chalk.red(file));
+          } else if (fs.statSync(path.join(currentDirectory, file)).isFile()) {
+            console.log(chalk.blue(file));
+          } else {
+            console.log(file);
+          }
+        });
+      } else {
+        if (flags.dirs) {
+          this.listDirectories(currentDirectory, files);
         }
-      });
+        if (flags.files) {
+          this.listFiles(currentDirectory, files);
+        }
+      }
     });
   }
 }
