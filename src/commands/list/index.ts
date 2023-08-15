@@ -42,8 +42,7 @@ export class List extends Command {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(List);
-    const currentDirectory = process.cwd(); // Aktuelles Verzeichnis
-
+    const currentDirectory = process.cwd();
     fs.readdir(currentDirectory, (err: any, files: any[]) => {
       if (err) {
         console.error("Error while reading directory:", err);

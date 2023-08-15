@@ -1,16 +1,18 @@
 import { Command } from "@oclif/core";
+import { searchForConfig } from "../../utils/confExplorer";
+import chalk = require("chalk");
+import { cleanUpFilename } from "../../utils/util";
 const fs = require("fs");
 const path = require("path");
 
 export class Clean extends Command {
   static description = "Clean current directory";
 
-  moveFile(currentDirectory: string, dirName: string, fileName: string) {
+  async moveFile(currentDirectory: string, dirName: string, fileName: string) {
     const currentPath = path.join(currentDirectory, fileName);
     const destinationPath = path.join(currentDirectory, dirName, fileName);
 
-    //check if dir <dirName> exists
-    this.initDirectory(currentDirectory, dirName);
+    await this.initDirectory(currentDirectory, dirName);
 
     fs.rename(currentPath, destinationPath, function (err: any) {
       if (err) {
@@ -21,12 +23,12 @@ export class Clean extends Command {
     });
   }
 
-  initDirectory(currentDirectory: string, dirName: string) {
+  async initDirectory(currentDirectory: string, dirName: string) {
     const dirPath = path.join(currentDirectory, dirName);
 
     try {
       if (!fs.existsSync(dirPath)) {
-        fs.mkdir(dirPath, { recursive: true }, (err: any) => {
+        await fs.mkdir(dirPath, { recursive: true }, (err: any) => {
           if (err) {
             return console.error(err);
           }
@@ -38,32 +40,39 @@ export class Clean extends Command {
     }
   }
 
-  async run(): Promise<void> {
-    const currentDirectory = process.cwd(); // Aktuelles Verzeichnis
+  validateForDirectory(filename: string, config: any) {
+    //normalize filename and remove soft-hyphens
+    const normalizedFilename = cleanUpFilename(filename);
+    const validationRule = new RegExp(
+      cleanUpFilename(config.cleanRules[0].pattern)
+    );
+    const isMatch = validationRule.test(normalizedFilename);
+    return isMatch;
+  }
 
+  async run(): Promise<void> {
+    const currentDirectory = process.cwd();
+    const config = await searchForConfig();
     fs.readdir(currentDirectory, (err: any, files: any[]) => {
       if (err) {
         console.error("Fehler beim Lesen des Verzeichnisses:", err);
         return;
       }
 
-      files.forEach((file: any) => {
+      files.forEach(async (file: any) => {
         const filePath = path.join(currentDirectory, file);
         const fileType = path.extname(file);
         const isFile = fs.statSync(filePath).isFile();
         if (isFile) {
-          if (fileType) {
-            switch (fileType) {
-              case ".pdf":
-                this.moveFile(currentDirectory, "pdf", file);
-                break;
-              case ".png":
-                this.moveFile(currentDirectory, "png", file);
-                break;
-              default:
-                break;
-            }
+          //TODO: iterate over config array and validate
+          if (this.validateForDirectory(file, config.config)) {
+            await this.moveFile(
+              currentDirectory,
+              config.config.cleanRules[0].dirName,
+              file
+            );
           }
+          //TODO: implement fallback for cleanup-strategy if no config present
         }
       });
     });
