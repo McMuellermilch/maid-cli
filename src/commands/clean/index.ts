@@ -61,7 +61,7 @@ export class Clean extends Command {
 
       files.forEach(async (file: any) => {
         const filePath = path.join(currentDirectory, file);
-        const fileType = path.extname(file);
+        //const fileType = path.extname(file);
         const isFile = fs.statSync(filePath).isFile();
         if (isFile) {
           //TODO: iterate over config array and validate
