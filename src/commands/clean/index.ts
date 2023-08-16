@@ -25,10 +25,10 @@ export class Clean extends Command {
 
   async initDirectory(currentDirectory: string, dirName: string) {
     const dirPath = path.join(currentDirectory, dirName);
-    //TODO: directory creation needs to be deep.
+
     try {
       if (!fs.existsSync(dirPath)) {
-        await fs.mkdir(dirPath, { recursive: true }, (err: any) => {
+        await fs.promises.mkdir(dirPath, { recursive: true }, (err: any) => {
           if (err) {
             return console.error(err);
           }
