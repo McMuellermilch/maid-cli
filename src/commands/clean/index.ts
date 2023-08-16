@@ -40,14 +40,18 @@ export class Clean extends Command {
     }
   }
 
-  validateForDirectory(filename: string, config: any) {
+  validateDirectoryAndMoveFiles(filename: string, config: any) {
+    const currentDirectory = process.cwd();
     //normalize filename and remove soft-hyphens
     const normalizedFilename = cleanUpFilename(filename);
-    const validationRule = new RegExp(
-      cleanUpFilename(config.cleanRules[0].pattern)
+    config.cleanRules.forEach(
+      async (config: { pattern: string; dirName: string }) => {
+        const validationRule = new RegExp(cleanUpFilename(config.pattern));
+        if (validationRule.test(normalizedFilename)) {
+          await this.moveFile(currentDirectory, config.dirName, filename);
+        }
+      }
     );
-    const isMatch = validationRule.test(normalizedFilename);
-    return isMatch;
   }
 
   async run(): Promise<void> {
@@ -58,20 +62,11 @@ export class Clean extends Command {
         console.error("Fehler beim Lesen des Verzeichnisses:", err);
         return;
       }
-
       files.forEach(async (file: any) => {
         const filePath = path.join(currentDirectory, file);
-        //const fileType = path.extname(file);
         const isFile = fs.statSync(filePath).isFile();
         if (isFile) {
-          //TODO: iterate over config array and validate
-          if (this.validateForDirectory(file, config.config)) {
-            await this.moveFile(
-              currentDirectory,
-              config.config.cleanRules[0].dirName,
-              file
-            );
-          }
+          this.validateDirectoryAndMoveFiles(file, config.config);
           //TODO: implement fallback for cleanup-strategy if no config present
         }
       });
