@@ -4,6 +4,8 @@ import chalk = require("chalk");
 import { cleanUpFilename } from "../../utils/util";
 const fs = require("fs");
 const path = require("path");
+const inquirer = require("inquirer");
+import { Answers } from "inquirer";
 
 interface Config {
   config: {
@@ -58,6 +60,10 @@ export class Clean extends Command {
     }
   }
 
+  isGitRepo() {
+    return fs.existsSync(path.join(process.cwd(), ".git"));
+  }
+
   isAtLeastOneRulePresent({ pattern, fileExtension }: CleanRule) {
     return (
       (pattern && pattern !== "") || (fileExtension && fileExtension.length > 0)
@@ -105,23 +111,50 @@ export class Clean extends Command {
     });
   }
 
-  async run(): Promise<void> {
+  cleanDirectory(config: Config) {
     const currentDirectory = process.cwd();
+    fs.readdir(currentDirectory, (err: any, files: any[]) => {
+      if (err) {
+        console.error("Fehler beim Lesen des Verzeichnisses:", err);
+        return;
+      }
+      files.forEach(async (file: any) => {
+        const filePath = path.join(currentDirectory, file);
+        const isFile = fs.statSync(filePath).isFile();
+        if (isFile) {
+          this.validateDirectoryAndMoveFiles(file, config.config);
+        }
+      });
+    });
+  }
+
+  async run(): Promise<void> {
     const config: ConfigOrNull = await searchForConfig();
     if (config && config.config) {
-      fs.readdir(currentDirectory, (err: any, files: any[]) => {
-        if (err) {
-          console.error("Fehler beim Lesen des Verzeichnisses:", err);
-          return;
-        }
-        files.forEach(async (file: any) => {
-          const filePath = path.join(currentDirectory, file);
-          const isFile = fs.statSync(filePath).isFile();
-          if (isFile) {
-            this.validateDirectoryAndMoveFiles(file, config.config);
-          }
-        });
-      });
+      if (this.isGitRepo()) {
+        inquirer
+          .prompt([
+            {
+              type: "confirm",
+              name: "continue",
+              message:
+                "Current directory appears to be a git repo - are you sure you want to continue?",
+            },
+          ])
+          .then((answers: Answers) => {
+            if (answers.continue) {
+              this.cleanDirectory(config);
+            } else {
+              console.log("Clean aborted.");
+              return;
+            }
+          })
+          .catch((error: string) => {
+            console.log(error);
+          });
+      } else {
+        this.cleanDirectory(config);
+      }
     } else {
       console.log(
         chalk.redBright("No configuration found! - No config, no cleaning")
