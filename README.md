@@ -15,14 +15,14 @@ Maid is your lightweight CLI utility sidekick to help with exactly that.
 ## Installation
 
 ```
-npm install maid -g
+npm install maid-cleaning-cli -g
 ```
 
 ## Usage
 
 ### Listing contents of directory
 
-To list all files und sub-directories in a certain direcotry, just navigate to said directory and tell maid to list:
+To list all files and sub-directories in a certain direcotry, just navigate to said directory and tell maid to list:
 
 ```
 maid list
