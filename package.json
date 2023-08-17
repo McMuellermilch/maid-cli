@@ -1,6 +1,6 @@
 {
   "name": "maid-cleaning-cli",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "maid will clean for you",
   "author": "Florian Mueller",
   "bin": {
