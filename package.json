@@ -6,10 +6,10 @@
   "bin": {
     "maid": "./bin/run"
   },
-  "homepage": "https://github.com/cli/maid",
+  "homepage": "https://github.com/McMuellermilch/maid-cli",
   "license": "MIT",
   "main": "dist/index.js",
-  "repository": "cli/maid",
+  "repository": "McMuellermilch/maid-cli",
   "files": [
     "/bin",
     "/dist",
