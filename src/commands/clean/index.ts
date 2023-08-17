@@ -58,6 +58,12 @@ export class Clean extends Command {
     }
   }
 
+  isAtLeastOneRulePresent({ pattern, fileExtension }: CleanRule) {
+    return (
+      (pattern && pattern !== "") || (fileExtension && fileExtension.length > 0)
+    );
+  }
+
   isValidPattern(cleanRule: CleanRule, filename: string): boolean {
     if (cleanRule.hasOwnProperty("pattern") && cleanRule.pattern) {
       //normalize filename and remove soft-hyphens
@@ -89,6 +95,7 @@ export class Clean extends Command {
   validateDirectoryAndMoveFiles(filename: string, config: any) {
     config.cleanRules.forEach(async (config: CleanRule) => {
       if (
+        this.isAtLeastOneRulePresent(config) &&
         this.isAppliedToCwd(config) &&
         this.isValidPattern(config, filename) &&
         this.isFileExtension(config, filename)
