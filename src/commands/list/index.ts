@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 export class List extends Command {
-  static description = "Clean current directory";
+  static description = "List contents of current directory";
 
   static flags = {
     files: Flags.boolean({
