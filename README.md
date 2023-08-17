@@ -30,6 +30,10 @@ maid list
 
 The output will be color-coded. Blue will be all the files in the directory and red will be the names of sub-directories.
 
+<p align="center">
+  <img src="resources/maid_resource-screenshot_maid-list.png" alt="logo">
+</p>
+
 To specify what to list, `list` accepts two flags:
 
 - `-f` or `--files` to show files
@@ -47,6 +51,22 @@ maid clean
 
 By default maid will not start cleaining without you instructing what needs cleaing and what must not be cleaned. For the clean command to take action, a `.maidrc`-file is required. If no config is present, an error with instructions will be printed - so don't worry, maid won't go ahead and move your files around without you knowing what you are doing.
 
+### Example
+
+With the following rule in my maidrc
+
+```yaml
+---
+cleanRules:
+  - { pattern: "^Test", fileExtension: ".txt", dirName: "test_txt_files" }
+```
+
+Every file with a name starting with `"Test"` and a file extention of `".txt"` will be moved to a folder `test_txt_files`.
+
+<p align="center">
+  <img src="resources/maid_resource-screenshot-list-and-clean.png" alt="logo">
+</p>
+
 ### .maidrc
 
 To instruct maid on what should be cleaned, create a `.maidrc`-file on your machine and maid will look for it when running.
@@ -62,10 +82,35 @@ The config file is far from finished. For now, you can specify one property in i
 
 `pattern`, `fileExtension` and `applyInDir` will be evaluated with `AND`-logic, so the rule
 
-`{ pattern: "^Testfile", fileExtension: [".png"], dirName: "testfiles", applyInDir: ['/Users/<username>/Desktop'] }`
+```json
+{
+  "pattern": "^Testfile",
+  "fileExtension": [".png"],
+  "dirName": "testfiles",
+  "applyInDir": ["/Users/<username>/Desktop"]
+}
+```
 
 will only move files to a folder called `testfiles`, if the following conditions are all met:
 
 - if the filename starts with `"Testfile"`
 - if the file has the extension `.png`
 - the current directory is `/Users/<username>/Desktop`
+
+If neither `pattern` nor `fileExtension` is defined, the rule will not trigger and do nothing.
+
+### git repo safeguard
+
+As an addiotional safeguard to prevent accidentally messing up the structure of git repositories, maid has a build in check when running `clean`. If current directory is a git repository, maid will ask if you wish to continue.
+
+<p align="center">
+  <img src="resources/maid_resource-screenshot_git-safeguard.png" alt="logo">
+</p>
+
+### Finding existing config
+
+To find if and where the `.maidrc` file might be, just ask maid for `config` and add the flag `-p` or `--path`:
+
+```
+maid config -p
+```
