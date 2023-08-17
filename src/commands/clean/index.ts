@@ -5,16 +5,28 @@ import { cleanUpFilename } from "../../utils/util";
 const fs = require("fs");
 const path = require("path");
 
+interface Config {
+  config: {
+    config?: CleanRule[];
+    filepath?: string;
+    isEmpty?: boolean;
+  };
+}
+
+type ConfigOrNull = Config | null | undefined;
+
 interface CleanRule {
-  pattern: string;
+  pattern?: string;
   dirName: string;
   applyInDir?: string[];
+  fileExtension?: string[];
 }
 
 export class Clean extends Command {
   static description = "Clean current directory";
 
-  async moveFile(currentDirectory: string, dirName: string, fileName: string) {
+  async moveFile(dirName: string, fileName: string) {
+    const currentDirectory = process.cwd();
     const currentPath = path.join(currentDirectory, fileName);
     const destinationPath = path.join(currentDirectory, dirName, fileName);
 
@@ -46,46 +58,81 @@ export class Clean extends Command {
     }
   }
 
-  isAppliedToCwd(cleanRule: CleanRule) {
-    if (cleanRule.hasOwnProperty("applyInDir")) {
-      return cleanRule.applyInDir?.includes(process.cwd());
+  isValidPattern(cleanRule: CleanRule, filename: string): boolean {
+    if (cleanRule.hasOwnProperty("pattern") && cleanRule.pattern) {
+      //normalize filename and remove soft-hyphens
+      const normalizedFilename = cleanUpFilename(filename);
+      const validationRule = new RegExp(cleanUpFilename(cleanRule.pattern));
+      return validationRule.test(normalizedFilename);
+    } else {
+      return true;
+    }
+  }
+
+  isFileExtension(cleanRule: CleanRule, filename: string): boolean {
+    if (cleanRule.hasOwnProperty("fileExtension") && cleanRule.fileExtension) {
+      const fileType = path.extname(filename);
+      return cleanRule.fileExtension.includes(fileType);
+    } else {
+      return true;
+    }
+  }
+
+  isAppliedToCwd(cleanRule: CleanRule): boolean {
+    if (cleanRule.hasOwnProperty("applyInDir") && cleanRule.applyInDir) {
+      return cleanRule.applyInDir.includes(process.cwd());
     } else {
       return true;
     }
   }
 
   validateDirectoryAndMoveFiles(filename: string, config: any) {
-    const currentDirectory = process.cwd();
-    //normalize filename and remove soft-hyphens
-    const normalizedFilename = cleanUpFilename(filename);
     config.cleanRules.forEach(async (config: CleanRule) => {
-      const validationRule = new RegExp(cleanUpFilename(config.pattern));
       if (
         this.isAppliedToCwd(config) &&
-        validationRule.test(normalizedFilename)
+        this.isValidPattern(config, filename) &&
+        this.isFileExtension(config, filename)
       ) {
-        await this.moveFile(currentDirectory, config.dirName, filename);
+        await this.moveFile(config.dirName, filename);
       }
     });
   }
 
   async run(): Promise<void> {
     const currentDirectory = process.cwd();
-    console.log(currentDirectory);
-    const config = await searchForConfig();
-    fs.readdir(currentDirectory, (err: any, files: any[]) => {
-      if (err) {
-        console.error("Fehler beim Lesen des Verzeichnisses:", err);
-        return;
-      }
-      files.forEach(async (file: any) => {
-        const filePath = path.join(currentDirectory, file);
-        const isFile = fs.statSync(filePath).isFile();
-        if (isFile) {
-          this.validateDirectoryAndMoveFiles(file, config.config);
-          //TODO: implement fallback for cleanup-strategy if no config present
+    const config: ConfigOrNull = await searchForConfig();
+    if (config && config.config) {
+      fs.readdir(currentDirectory, (err: any, files: any[]) => {
+        if (err) {
+          console.error("Fehler beim Lesen des Verzeichnisses:", err);
+          return;
         }
+        files.forEach(async (file: any) => {
+          const filePath = path.join(currentDirectory, file);
+          const isFile = fs.statSync(filePath).isFile();
+          if (isFile) {
+            this.validateDirectoryAndMoveFiles(file, config.config);
+          }
+        });
       });
-    });
+    } else {
+      console.log(
+        chalk.redBright("No configuration found! - No config, no cleaning")
+      );
+      console.log(
+        "To prevent you from accidentally or unwillingly moving files around,"
+      );
+      console.log(
+        "maid requires instructions from you. Please create a " +
+          chalk.greenBright(".maidrc") +
+          " file"
+      );
+      console.log("and give maid instructions on how and where to clean.");
+      console.log("Further information on the required instructions");
+      console.log(
+        "can be found at: " +
+          chalk.gray("https://github.com/McMuellermilch/maid-cli")
+      );
+    }
   }
 }
