@@ -2,15 +2,13 @@
   <img src="resources/maid_icon.png" alt="logo" width="100" height="100">
 </p>
 
-# maid-cleaning-cli
+<div align="center">
+  <h1>maid-cleaning-cli</h1>
+</div>
 
-### Maid keeps the house clean.
+### Maid - Your Lightweight CLI Utility for Keeping Directories Clean and Structured
 
-Directories can get pretty messy. Maid is here to help. Define where which files should go and maid will take care of it.
-
-Wouldn't it be nice to just type the word `clean` and have the current directory nice and tidy again? Or just type `list` and see the mess that grew on your Desktop over time?
-
-Maid is your lightweight CLI utility sidekick to help with exactly that.
+Organizing directories can become messy over time. Maid is here to help. Define where files should go, and Maid will take care of it. Listing files, moving files, and maintaining clean directories - Maid is here for you!
 
 ## Installation
 
@@ -20,15 +18,15 @@ npm install maid-cleaning-cli -g
 
 ## Usage
 
-### Listing contents of directory
+### Listing Contents of a Directory
 
 To list all files and sub-directories in a certain directory, just navigate to said directory and tell maid to list:
 
-```
+```sh
 maid list
 ```
 
-The output will be color-coded. Blue will be all the files in the directory and red will be the names of sub-directories.
+The output will be color-coded. Blue represents files, and red represents sub-directories.
 
 <p align="center">
   <img src="resources/maid_resource-screenshot_maid-list.png" alt="logo">
@@ -45,7 +43,7 @@ When using the flags, a color-coded headline will be printed above the actual re
 
 To clean a directory, just simply navigate to the messy directory and tell maid to clean:
 
-```
+```sh
 maid clean
 ```
 
@@ -53,7 +51,7 @@ By default maid will not start cleaining without you instructing what needs clea
 
 ### Example
 
-With the following rule in my maidrc
+With the following rule in my `.maidrc`:
 
 ```yaml
 ---
@@ -67,13 +65,13 @@ Every file with a name starting with `"Test"` and a file extention of `".txt"` w
   <img src="resources/maid_resource-screenshot-list-and-clean.png" alt="logo">
 </p>
 
-### .maidrc
+### .maidrc Configuration
 
-To instruct maid on what should be cleaned, create a `.maidrc`-file on your machine and maid will look for it when running.
+To instruct Maid on what to clean, create a `.maidrc` configuration file on your machine. Maid will use it when running.
 
-The config file is far from finished. For now, you can specify one property in it: `cleanRules`
+For now, the config file only supports one property: `cleanRules`.
 
-`cleanRules` is an array of objects, which contains all the rules for maid on where and what to clean. Each object in this list will represent one rule. A rule indicates what to clean. Restrictions can be added to specify in which cases (specific filenames, specific file-extensions, specific folders only, ...) maid will go ahead and actually clean. The following fields can be defined as of now:
+`cleanRules` is an array of objects that define the rules for Maid to clean. Each object represents one rule, indicating what to clean and under which conditions.
 
 - `pattern (String)`: A regular expression to describe how the filename should look (e.g. `"^Test"` will filter all files starting with "Test")
 - `fileExtension (String-Array)`: A list of file extension to limit the files to be cleaned (e.g. `".png"` - include the `.`)
@@ -107,12 +105,17 @@ As an additional safeguard to prevent accidentally messing up the structure of g
   <img src="resources/maid_resource-screenshot_git-safeguard.png" alt="logo">
 </p>
 
-###
+### Getting Information about Saved Configuration
 
-### Finding existing config
+To retrieve information about the saved `.maidrc` configuration, use the following command:
 
-To find if and where the `.maidrc` file might be, just ask maid for `config` and add the flag `-p` or `--path`:
+```sh
+maid config
 
 ```
-maid config -p
-```
+
+For specific information, use these flags:
+
+- `p` or `--path`: Get the path to the config file
+- `r` or `--cleanRules`: Get all saved rules from the config
+- `d` or `--rulesForDir`: Get rules specific to the current directory
