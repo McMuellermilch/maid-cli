@@ -22,7 +22,7 @@ npm install maid-cleaning-cli -g
 
 ### Listing contents of directory
 
-To list all files and sub-directories in a certain direcotry, just navigate to said directory and tell maid to list:
+To list all files and sub-directories in a certain directory, just navigate to said directory and tell maid to list:
 
 ```
 maid list
@@ -73,7 +73,7 @@ To instruct maid on what should be cleaned, create a `.maidrc`-file on your mach
 
 The config file is far from finished. For now, you can specify one property in it: `cleanRules`
 
-`cleanRules` is an array of objects, which contains all the rule for maid on where and what to clean. Each object in this list will represent one rule. A rule indicates what to clean. Restrictions can be added to specify in which cases (specific filenames, specific file-extensions, specific folders only, ...) maid will go ahead and actually clean. The following fields can be defined as of now:
+`cleanRules` is an array of objects, which contains all the rules for maid on where and what to clean. Each object in this list will represent one rule. A rule indicates what to clean. Restrictions can be added to specify in which cases (specific filenames, specific file-extensions, specific folders only, ...) maid will go ahead and actually clean. The following fields can be defined as of now:
 
 - `pattern (String)`: A regular expression to describe how the filename should look (e.g. `"^Test"` will filter all files starting with "Test")
 - `fileExtension (String-Array)`: A list of file extension to limit the files to be cleaned (e.g. `".png"` - include the `.`)
@@ -101,7 +101,7 @@ If neither `pattern` nor `fileExtension` is defined, the rule will not trigger a
 
 ### git repo safeguard
 
-As an addiotional safeguard to prevent accidentally messing up the structure of git repositories, maid has a build in check when running `clean`. If current directory is a git repository, maid will ask if you wish to continue.
+As an additional safeguard to prevent accidentally messing up the structure of git repositories, maid has a build in check when running `clean`. If current directory is a git repository, maid will ask if you wish to continue.
 
 <p align="center">
   <img src="resources/maid_resource-screenshot_git-safeguard.png" alt="logo">
