@@ -106,7 +106,7 @@ export class Config extends Command {
     if (flags.init) {
       await this.createConfigFile();
     } else {
-      if (!flags.init && !config) {
+      if (!config) {
         console.log("No config found!");
         return;
       }

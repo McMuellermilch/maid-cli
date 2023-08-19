@@ -119,3 +119,11 @@ For specific information, use these flags:
 - `p` or `--path`: Get the path to the config file
 - `r` or `--cleanRules`: Get all saved rules from the config
 - `d` or `--rulesForDir`: Get rules specific to the current directory
+
+### Creating Configuration
+
+If no configuration is present, maid can even initiate configuration for you, just call config with the flag `-i` or `--init`
+
+```sh
+maid config --init
+```
