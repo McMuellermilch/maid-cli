@@ -107,6 +107,8 @@ As an additional safeguard to prevent accidentally messing up the structure of g
   <img src="resources/maid_resource-screenshot_git-safeguard.png" alt="logo">
 </p>
 
+###
+
 ### Finding existing config
 
 To find if and where the `.maidrc` file might be, just ask maid for `config` and add the flag `-p` or `--path`:

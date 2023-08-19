@@ -7,23 +7,6 @@ const path = require("path");
 const inquirer = require("inquirer");
 import { Answers } from "inquirer";
 
-interface Config {
-  config: {
-    config?: CleanRule[];
-    filepath?: string;
-    isEmpty?: boolean;
-  };
-}
-
-type ConfigOrNull = Config | null | undefined;
-
-interface CleanRule {
-  pattern?: string;
-  dirName: string;
-  applyInDir?: string[];
-  fileExtension?: string[];
-}
-
 export class Clean extends Command {
   static description = "Clean current directory";
 
