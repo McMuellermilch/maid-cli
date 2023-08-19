@@ -49,7 +49,7 @@ maid clean
 
 By default maid will not start cleaining without you instructing what needs cleaing and what must not be cleaned. For the clean command to take action, a `.maidrc`-file is required. If no config is present, an error with instructions will be printed - so don't worry, maid won't go ahead and move your files around without you knowing what you are doing.
 
-### Example
+#### Example
 
 With the following rule in my `.maidrc`:
 
@@ -126,3 +126,43 @@ If no configuration is present, maid can even initiate configuration for you, ju
 ```sh
 maid config --init
 ```
+
+This command will guide you through the process of creating a .maidrc configuration file. If the configuration file already exists, the command will let you know.
+
+### Adding a Rule to Configuration
+
+To add a rule to the configuration, use the following command:
+
+```sh
+maid config --addRule
+```
+
+This command will prompt you to enter details for the rule you want to add. You will need to provide the following information:
+
+- **Pattern** (_required if no fileExtension is specified_): A regular expression to match filenames.
+- **File Extension** (_required if no pattern is specified_): A list of file extensions separated by commas (e.g., .txt, .jpg).
+- **Apply in Directory** (_optional_): Specify one or more directory paths where the rule should apply.
+- **Directory Name** (_required_): The name of the directory where matching files will be moved.
+
+The `addRule` command allows you to define specific cleanup rules according to your needs.
+
+#### Example:
+
+Suppose you want to add a rule to move all files starting with `"Report"` and having the extensions `.docx` and `.pdf` to a directory called `reports`. You can use the following command:
+
+```sh
+maid config --addRule
+```
+
+Then provide the following information in the prompts:
+
+- **Pattern:** `^Report`
+- **File Extension:** `.docx, .pdf`
+- **Apply in Directory:** `(leave empty for global rule)`
+- **Directory Name:** `reports`
+
+<p align="center">
+  <img src="resources/maid_resource_addrule.png" alt="logo">
+</p>
+
+This will create a rule that moves files matching the specified pattern and extensions to the reports directory.

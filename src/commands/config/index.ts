@@ -137,7 +137,7 @@ export class Config extends Command {
       message:
         "File Extension (optional, separate multiple values with comma):",
       filter: (input: string) =>
-        input ? input.split(",").map((ext) => ext.trim()) : [],
+        input ? input.split(",").map((ext) => ext.trim()) : null,
     };
 
     const applyInDirQuestion = {
@@ -146,7 +146,7 @@ export class Config extends Command {
       message:
         "Apply Rule only in following dirs (optional, separate multiple values with comma):",
       filter: (input: string) =>
-        input ? input.split(",").map((ext) => ext.trim()) : [],
+        input ? input.split(",").map((path) => path.trim()) : null,
     };
 
     const dirNameQuestion = {
@@ -171,7 +171,9 @@ export class Config extends Command {
       process.exit(1);
     }
 
-    return answers;
+    return Object.fromEntries(
+      Object.entries(answers).filter(([_, v]) => v != null)
+    );
   }
 
   async run(): Promise<void> {
