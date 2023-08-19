@@ -34,6 +34,11 @@ export class Config extends Command {
       description: "Create new .maidrc file",
       required: false,
     }),
+    addRule: Flags.boolean({
+      char: "a",
+      description: "Add rule to cleanRules",
+      required: false,
+    }),
   };
 
   getRulesForCurrentDir(config: CleanRule[]) {
@@ -99,47 +104,130 @@ export class Config extends Command {
     }
   }
 
+  async addRule(ruleObject: CleanRule): Promise<void> {
+    const { filepath } = await await searchForConfig();
+
+    try {
+      const configContent = fs.readFileSync(filepath, "utf8");
+      const config = JSON.parse(configContent);
+
+      if (!config.cleanRules) {
+        config.cleanRules = []; // Initialize cleanRules if it doesn't exist
+      }
+
+      config.cleanRules.push(ruleObject);
+
+      fs.writeFileSync(filepath, JSON.stringify(config, null, 2));
+      console.log("Rule added to .maidrc:", ruleObject);
+    } catch (error) {
+      console.error("Error adding rule to .maidrc:", error);
+    }
+  }
+
+  async promptForRule(): Promise<any> {
+    const patternQuestion = {
+      type: "input",
+      name: "pattern",
+      message: "Pattern (optional):",
+    };
+
+    const fileExtensionQuestion = {
+      type: "input",
+      name: "fileExtension",
+      message:
+        "File Extension (optional, separate multiple values with comma):",
+      filter: (input: string) =>
+        input ? input.split(",").map((ext) => ext.trim()) : [],
+    };
+
+    const applyInDirQuestion = {
+      type: "input",
+      name: "applyInDir",
+      message:
+        "Apply Rule only in following dirs (optional, separate multiple values with comma):",
+      filter: (input: string) =>
+        input ? input.split(",").map((ext) => ext.trim()) : [],
+    };
+
+    const dirNameQuestion = {
+      type: "input",
+      name: "dirName",
+      message: "Directory Name (required):",
+      validate: (input: string) =>
+        !!input.trim() || "Directory Name is required",
+    };
+
+    const answers = await inquirer.prompt([
+      fileExtensionQuestion,
+      patternQuestion,
+      dirNameQuestion,
+      applyInDirQuestion,
+    ]);
+
+    if (!answers.pattern && answers.fileExtension.length === 0) {
+      console.error(
+        chalk.redBright("Either Pattern or File Extension is required")
+      );
+      process.exit(1);
+    }
+
+    return answers;
+  }
+
   async run(): Promise<void> {
     const config = await searchForConfig();
     const { flags } = await this.parse(Config);
 
     if (flags.init) {
       await this.createConfigFile();
-    } else {
-      if (!config) {
-        console.log("No config found!");
-        return;
-      }
-
-      if (flags.path) {
-        console.log(chalk.greenBright("Config for maid can be found here:"));
-        console.log(config.filepath);
-        return;
-      }
-
-      if (flags.cleanRules) {
-        if (config.config && config.config.cleanRules) {
-          console.log(chalk.greenBright("All rules for cleaning:"));
-          console.log(config.config.cleanRules);
-        } else {
-          console.log("No cleanRules found!");
-        }
-        return;
-      }
-
-      if (flags.rulesForDir) {
-        if (config.config && config.config.cleanRules) {
-          console.log(
-            chalk.greenBright("Rules applicable in current directory:")
-          );
-          console.log(this.getRulesForCurrentDir(config.config.cleanRules));
-        } else {
-          console.log("No cleanRules found!");
-        }
-        return;
-      }
-
-      console.log(config);
+      return;
     }
+
+    if (!config) {
+      console.log("No config found!");
+      return;
+    }
+
+    if (flags.addRule) {
+      try {
+        const rule = await this.promptForRule();
+        if (rule) {
+          await this.addRule(rule);
+        }
+      } catch (error) {
+        console.log("error while adding rule");
+      }
+      return;
+    }
+
+    if (flags.path) {
+      console.log(chalk.greenBright("Config for maid can be found here:"));
+      console.log(config.filepath);
+      return;
+    }
+
+    if (flags.cleanRules) {
+      if (config.config && config.config.cleanRules) {
+        console.log(chalk.greenBright("All rules for cleaning:"));
+        console.log(config.config.cleanRules);
+      } else {
+        console.log("No cleanRules found!");
+      }
+      return;
+    }
+
+    if (flags.rulesForDir) {
+      if (config.config && config.config.cleanRules) {
+        console.log(
+          chalk.greenBright("Rules applicable in current directory:")
+        );
+        console.log(this.getRulesForCurrentDir(config.config.cleanRules));
+      } else {
+        console.log("No cleanRules found!");
+      }
+      return;
+    }
+
+    console.log(config);
   }
 }

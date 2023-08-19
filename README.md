@@ -111,7 +111,6 @@ To retrieve information about the saved `.maidrc` configuration, use the followi
 
 ```sh
 maid config
-
 ```
 
 For specific information, use these flags:
