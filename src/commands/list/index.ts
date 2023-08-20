@@ -1,71 +1,73 @@
-import { Command, Flags } from "@oclif/core";
-const chalk = require("chalk");
-const fs = require("fs");
-const path = require("path");
+import {Command, Flags} from '@oclif/core'
+const chalk = require('chalk')
+const fs = require('fs')
+const path = require('path')
 
 export class List extends Command {
-  static description = "List contents of current directory";
+  static description = 'List contents of current directory';
 
   static flags = {
     files: Flags.boolean({
-      char: "f",
-      description: "Show files",
+      char: 'f',
+      description: 'Show files',
       required: false,
     }),
     dirs: Flags.boolean({
-      char: "d",
-      description: "Show directories",
+      char: 'd',
+      description: 'Show directories',
       required: false,
     }),
   };
 
-  listFiles(currentDirectory: string, files: string[]) {
-    const fileList = files.filter((file) =>
-      fs.statSync(path.join(currentDirectory, file)).isFile()
-    );
-    console.log(chalk.blue("\nFiles in current directory"));
-    fileList.forEach((file: any) => {
-      console.log(file);
-    });
+  listFiles(currentDirectory: string, files: string[]): void {
+    const fileList = files.filter(file =>
+      fs.statSync(path.join(currentDirectory, file)).isFile(),
+    )
+    console.log(chalk.blue('\nFiles in current directory'))
+    for (const file of fileList) {
+      console.log(file)
+    }
   }
 
-  listDirectories(currentDirectory: string, files: string[]) {
-    const dirList = files.filter((file) =>
-      fs.statSync(path.join(currentDirectory, file)).isDirectory()
-    );
+  listDirectories(currentDirectory: string, files: string[]): void {
+    const dirList = files.filter(file =>
+      fs.statSync(path.join(currentDirectory, file)).isDirectory(),
+    )
 
-    console.log(chalk.red("\nDirectories in current directory"));
-    dirList.forEach((file: any) => {
-      console.log(file);
-    });
+    console.log(chalk.red('\nDirectories in current directory'))
+    for (const file of dirList) {
+      console.log(file)
+    }
   }
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(List);
-    const currentDirectory = process.cwd();
+    const {flags} = await this.parse(List)
+    const currentDirectory = process.cwd()
     fs.readdir(currentDirectory, (err: any, files: any[]) => {
       if (err) {
-        console.error("Error while reading directory:", err);
-        return;
+        console.error('Error while reading directory:', err)
+        return
       }
+
       if (!flags.files && !flags.dirs) {
-        files.forEach((file) => {
+        for (const file of files) {
           if (fs.statSync(path.join(currentDirectory, file)).isDirectory()) {
-            console.log(chalk.red(file));
+            console.log(chalk.red(file))
           } else if (fs.statSync(path.join(currentDirectory, file)).isFile()) {
-            console.log(chalk.blue(file));
+            console.log(chalk.blue(file))
           } else {
-            console.log(file);
+            console.log(file)
           }
-        });
+        }
       } else {
         if (flags.dirs) {
-          this.listDirectories(currentDirectory, files);
+          this.listDirectories(currentDirectory, files)
         }
+
         if (flags.files) {
-          this.listFiles(currentDirectory, files);
+          this.listFiles(currentDirectory, files)
         }
       }
-    });
+    })
   }
 }
