@@ -19,7 +19,7 @@
   "dependencies": {
     "@oclif/core": "^2",
     "@oclif/plugin-help": "^5",
-    "@oclif/plugin-plugins": "^3.2.6",
+    "@oclif/plugin-plugins": "^3.3.0",
     "@types/inquirer": "^9.0.3",
     "chalk": "^4.1.2",
     "cosmiconfig": "^8.2.0",
@@ -28,7 +28,7 @@
     "sinon": "^15.2.0"
   },
   "devDependencies": {
-    "@oclif/test": "^2.4.5",
+    "@oclif/test": "^2.4.7",
     "@types/chai": "^4",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.18.40",
