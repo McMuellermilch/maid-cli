@@ -22,7 +22,7 @@
     "@oclif/plugin-plugins": "^3.4.0",
     "@types/inquirer": "^9.0.3",
     "chalk": "^4.1.2",
-    "cosmiconfig": "^8.2.0",
+    "cosmiconfig": "^8.3.5",
     "inquirer": "^8.2.6",
     "js-yaml": "^4.1.0",
     "sinon": "^15.2.0"
