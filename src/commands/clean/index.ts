@@ -1,11 +1,11 @@
-import {Command} from '@oclif/core'
-import {searchForConfig} from '../../utils/conf-explorer'
+import { Command, Flags } from '@oclif/core';
+import { searchForConfig } from '../../utils/conf-explorer';
 import chalk = require('chalk');
-import {cleanUpFilename} from '../../utils/util'
-const fs = require('fs')
-const path = require('path')
-const inquirer = require('inquirer')
-import {Answers} from 'inquirer'
+import { cleanUpFilename } from '../../utils/util';
+const fs = require('fs');
+const path = require('path');
+const inquirer = require('inquirer');
+import { Answers } from 'inquirer';
 
 interface Config {
   config: {
@@ -31,42 +31,54 @@ interface CleanRule {
 export class Clean extends Command {
   static description = 'Clean current directory';
 
-  moveFile(dirName: string, fileName: string): void {
-    const currentDirectory = process.cwd()
-    const currentPath = path.join(currentDirectory, fileName)
-    const destinationPath = path.join(currentDirectory, dirName, fileName)
+  static flags = {
+    global: Flags.boolean({
+      char: 'g',
+      description: 'Clean globally',
+      required: false,
+    }),
+  };
 
-    this.initDirectory(currentDirectory, dirName)
+  async moveFile(
+    dirPath: string,
+    dirName: string,
+    fileName: string
+  ): Promise<void> {
+    const currentDirectory = dirPath;
+    const currentPath = path.join(currentDirectory, fileName);
+    const destinationPath = path.join(currentDirectory, dirName, fileName);
+
+    await this.initDirectory(currentDirectory, dirName);
 
     fs.rename(currentPath, destinationPath, function (err: any) {
       if (err) {
-        throw err
+        throw err;
       } else {
-        console.log('Moved file ' + fileName + ' to directory ' + dirName)
+        console.log('Moved file ' + fileName + ' to directory ' + dirName);
       }
-    })
+    });
   }
 
   async initDirectory(currentDirectory: string, dirName: string): Promise<any> {
-    const dirPath = path.join(currentDirectory, dirName)
+    const dirPath = path.join(currentDirectory, dirName);
 
     try {
       if (!fs.existsSync(dirPath)) {
-        await fs.promises.mkdir(dirPath, {recursive: true}, (err: any) => {
+        await fs.promises.mkdir(dirPath, { recursive: true }, (err: any) => {
           if (err) {
-            return console.error(err)
+            return console.error(err);
           }
 
-          console.log('Directory created successfully!')
-        })
+          console.log('Directory created successfully!');
+        });
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   }
 
   isGitRepo(): boolean {
-    return fs.existsSync(path.join(process.cwd(), '.git'))
+    return fs.existsSync(path.join(process.cwd(), '.git'));
   }
 
   isAtLeastOneRulePresent({
@@ -75,7 +87,7 @@ export class Clean extends Command {
   }: CleanRule): boolean | undefined {
     return (
       (pattern && pattern !== '') || (fileExtension && fileExtension.length > 0)
-    )
+    );
   }
 
   isValidPattern(cleanRule: CleanRule, filename: string): boolean {
@@ -84,12 +96,12 @@ export class Clean extends Command {
       cleanRule.pattern
     ) {
       // normalize filename and remove soft-hyphens
-      const normalizedFilename = cleanUpFilename(filename)
-      const validationRule = new RegExp(cleanUpFilename(cleanRule.pattern))
-      return validationRule.test(normalizedFilename)
+      const normalizedFilename = cleanUpFilename(filename);
+      const validationRule = new RegExp(cleanUpFilename(cleanRule.pattern));
+      return validationRule.test(normalizedFilename);
     }
 
-    return true
+    return true;
   }
 
   isFileExtension(cleanRule: CleanRule, filename: string): boolean {
@@ -97,102 +109,126 @@ export class Clean extends Command {
       Object.prototype.hasOwnProperty.call(cleanRule, 'fileExtension') &&
       cleanRule.fileExtension
     ) {
-      const fileType = path.extname(filename)
-      return cleanRule.fileExtension.includes(fileType)
+      const fileType = path.extname(filename);
+      return cleanRule.fileExtension.includes(fileType);
     }
 
-    return true
+    return true;
   }
 
-  isAppliedToCwd(cleanRule: CleanRule): boolean {
+  isAppliedToCorrectDir(cleanRule: CleanRule, currentDir: string): boolean {
     if (
       Object.prototype.hasOwnProperty.call(cleanRule, 'applyInDir') &&
       cleanRule.applyInDir
     ) {
-      return cleanRule.applyInDir.includes(process.cwd())
+      return cleanRule.applyInDir.includes(currentDir);
     }
 
-    return true
+    return true;
   }
 
   async validateDirectoryAndMoveFiles(
     filename: string,
     config: MaidConfig,
+    directory: string
   ): Promise<void> {
     for (const conf of config.cleanRules) {
       if (
         this.isAtLeastOneRulePresent(conf) &&
-        this.isAppliedToCwd(conf) &&
+        this.isAppliedToCorrectDir(conf, directory) &&
         this.isValidPattern(conf, filename) &&
         this.isFileExtension(conf, filename)
       ) {
-        this.moveFile(conf.dirName, filename)
+        await this.moveFile(directory, conf.dirName, filename);
       }
     }
   }
 
-  cleanDirectory(config: Config): void {
-    const currentDirectory = process.cwd()
-    fs.readdir(currentDirectory, (err: any, files: any[]) => {
+  cleanGlobally(config: MaidConfig, configuration: Config): void {
+    for (const conf of config.cleanRules) {
+      if (conf.applyInDir && conf.applyInDir.length > 0) {
+        for (const dir of conf.applyInDir) {
+          // TODO: ich muss das so refatoren, dass clean Directory eine Rule und ein directory nimmt. Oder noch mal eine function extrahieren, für das cleanen pro file und rule
+          if (fs.existsSync(dir)) {
+            this.cleanDirectory(dir, configuration);
+          }
+        }
+      }
+    }
+  }
+
+  cleanDirectory(directory: string, config: Config): void {
+    fs.readdir(directory, (err: any, files: any[]) => {
       if (err) {
-        console.error('Fehler beim Lesen des Verzeichnisses:', err)
-        return
+        console.error('Fehler beim Lesen des Verzeichnisses:', err);
+        return;
       }
 
       for (const file of files) {
-        const filePath = path.join(currentDirectory, file)
-        const isFile = fs.statSync(filePath).isFile()
+        const filePath = path.join(directory, file);
+        const isFile = fs.statSync(filePath).isFile();
         if (isFile) {
-          this.validateDirectoryAndMoveFiles(file, config.config as MaidConfig)
+          this.validateDirectoryAndMoveFiles(
+            file,
+            config.config as MaidConfig,
+            directory
+          );
         }
       }
-    })
+    });
   }
 
   async run(): Promise<void> {
-    const config: ConfigOrNull = await searchForConfig()
+    const { flags } = await this.parse(Clean);
+    const config: ConfigOrNull = await searchForConfig();
     if (config && config.config) {
       if (this.isGitRepo()) {
         inquirer
-        .prompt([
-          {
-            type: 'confirm',
-            name: 'continue',
-            message:
+          .prompt([
+            {
+              type: 'confirm',
+              name: 'continue',
+              message:
                 'Current directory appears to be a git repo - are you sure you want to continue?',
-          },
-        ])
-        .then((answers: Answers) => {
-          if (answers.continue) {
-            this.cleanDirectory(config)
-          } else {
-            console.log('Clean aborted.')
-          }
-        })
-        .catch((error: string) => {
-          console.log(error)
-        })
+            },
+          ])
+          .then((answers: Answers) => {
+            if (answers.continue) {
+              const currentDirectory = process.cwd();
+              this.cleanDirectory(currentDirectory, config);
+            } else {
+              console.log('Clean aborted.');
+            }
+          })
+          .catch((error: string) => {
+            console.log(error);
+          });
       } else {
-        this.cleanDirectory(config)
+        if (flags.global) {
+          this.cleanGlobally(config.config as MaidConfig, config);
+        } else {
+          const currentDirectory = process.cwd();
+          this.cleanDirectory(currentDirectory, config);
+        }
       }
     } else {
       console.log(
-        chalk.redBright('No configuration found! - No config, no cleaning'),
-      )
+        chalk.redBright('No configuration found! - No config, no cleaning')
+      );
       console.log(
-        'To prevent you from accidentally or unwillingly moving files around,',
-      )
+        'To prevent you from accidentally or unwillingly moving files around,'
+      );
       console.log(
         'maid requires instructions from you. Please create a ' +
           chalk.greenBright('.maidrc') +
-          ' file',
-      )
-      console.log('and give maid instructions on how and where to clean.')
-      console.log('Further information on the required instructions')
+          ' file'
+      );
+      console.log('and give maid instructions on how and where to clean.');
+      console.log('Further information on the required instructions');
       console.log(
         'can be found at: ' +
-          chalk.gray('https://github.com/McMuellermilch/maid-cli'),
-      )
+          chalk.gray('https://github.com/McMuellermilch/maid-cli')
+      );
     }
   }
 }
