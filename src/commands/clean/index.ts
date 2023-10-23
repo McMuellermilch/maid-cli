@@ -48,15 +48,13 @@ export class Clean extends Command {
     const currentPath = path.join(currentDirectory, fileName);
     const destinationPath = path.join(currentDirectory, dirName, fileName);
 
-    await this.initDirectory(currentDirectory, dirName);
-
-    fs.rename(currentPath, destinationPath, function (err: any) {
-      if (err) {
-        throw err;
-      } else {
-        console.log('Moved file ' + fileName + ' to directory ' + dirName);
-      }
-    });
+    try {
+      await this.initDirectory(currentDirectory, dirName);
+      await fs.promises.rename(currentPath, destinationPath);
+      console.log('Moved file ' + fileName + ' to directory ' + dirName);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async initDirectory(currentDirectory: string, dirName: string): Promise<any> {
@@ -144,38 +142,59 @@ export class Clean extends Command {
     }
   }
 
-  cleanGlobally(config: MaidConfig, configuration: Config): void {
+  async cleanGlobally(
+    config: MaidConfig,
+    configuration: Config
+  ): Promise<void> {
     for (const conf of config.cleanRules) {
       if (conf.applyInDir && conf.applyInDir.length > 0) {
         for (const dir of conf.applyInDir) {
-          // TODO: ich muss das so refatoren, dass clean Directory eine Rule und ein directory nimmt. Oder noch mal eine function extrahieren, für das cleanen pro file und rule
-          if (fs.existsSync(dir)) {
-            this.cleanDirectory(dir, configuration);
-          }
+          await this.processDirectory(dir, configuration);
         }
       }
     }
   }
 
-  cleanDirectory(directory: string, config: Config): void {
-    fs.readdir(directory, (err: any, files: any[]) => {
-      if (err) {
-        console.error('Fehler beim Lesen des Verzeichnisses:', err);
-        return;
+  async processDirectory(dir: string, configuration: Config) {
+    try {
+      await fs.promises.access(dir);
+      console.log('\nCleaning in directory ' + chalk.greenBright(dir));
+      await this.cleanDirectory(dir, configuration);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        console.error(chalk.yellowBright('\nDirectory does not exist:'), dir);
+      } else {
+        console.error('\nError accessing directory:', err);
       }
+    }
+  }
 
+  async cleanDirectory(directory: string, config: Config): Promise<void> {
+    try {
+      const files = await fs.promises.readdir(directory);
       for (const file of files) {
-        const filePath = path.join(directory, file);
-        const isFile = fs.statSync(filePath).isFile();
-        if (isFile) {
-          this.validateDirectoryAndMoveFiles(
-            file,
-            config.config as MaidConfig,
-            directory
-          );
-        }
+        await this.processFile(file, directory, config);
       }
-    });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async processFile(
+    file: string,
+    directory: string,
+    config: Config
+  ): Promise<void> {
+    const filePath = path.join(directory, file);
+    const fileStat = await fs.promises.stat(filePath);
+
+    if (fileStat.isFile()) {
+      await this.validateDirectoryAndMoveFiles(
+        file,
+        config.config as MaidConfig,
+        directory
+      );
+    }
   }
 
   async run(): Promise<void> {

@@ -56,7 +56,7 @@ With the following rule in my `.maidrc`:
 ```yaml
 ---
 cleanRules:
-  - { pattern: "^Test", fileExtension: ".txt", dirName: "test_txt_files" }
+  - { pattern: '^Test', fileExtension: '.txt', dirName: 'test_txt_files' }
 ```
 
 Every file with a name starting with `"Test"` and a file extention of `".txt"` will be moved to a folder `test_txt_files`.
@@ -64,6 +64,59 @@ Every file with a name starting with `"Test"` and a file extention of `".txt"` w
 <p align="center">
   <img src="resources/maid_resource-screenshot-list-and-clean.png" alt="logo">
 </p>
+
+### Cleaning globally
+
+To add some more efficiency, maid can also execute all rules that have specified values for applyInDir with one single command:
+
+```sh
+maid clean -g
+```
+
+#### The important distinction to make here
+
+A rule is defined as _global_ when no values are present for `applyInDir`. This means a rule is applicable in every directory by using `maid clean`. Cleaning globally on the other hand refers to executing all defined rules that have specified directories in which the rules can be applied. In other words: only rules with a directory-safeguard will be applied when executing a global clean by using `maid clean -g`
+
+#### Example
+
+Given the following clean rules in `.maidrc`:
+
+```json
+{
+  "cleanRules": [
+    {
+      "fileExtension": [".txt"],
+      "dirName": "Text_Documents",
+      "applyInDir": [
+        "/Users/<username>/Desktop/testdir",
+        "/Users/<username>/Desktop/testdir2"
+      ]
+    },
+    {
+      "fileExtension": [".pdf"],
+      "dirName": "PDFs",
+      "applyInDir": [
+        "/Users/<username>/Desktop/testdir3",
+        "/Users/<username>/Desktop/testdir4"
+      ]
+    }
+  ]
+}
+```
+
+And the test directories `testdir`, `testdir2`, `testdir4` in `/Users/<username>/Desktop`. Each directory contains the same test files:
+
+<p align="center">
+  <img src="resources/maid_resource_screenshot_global_testfiles_list.png" alt="logo">
+</p>
+
+A global clean called from `/Desktop` will show the following result:
+
+<p align="center">
+  <img src="resources/maid_resource_screenshot_global_clean.png" alt="logo">
+</p>
+
+For each rule, all directories specified in `applyInDir` are cleaned according to the rule.
 
 ### .maidrc Configuration
 
